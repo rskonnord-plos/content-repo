@@ -2,7 +2,7 @@ package org.plos.repo.newones;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import org.apache.commons.io.FileUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.plos.repo.rest.BucketController;
@@ -10,15 +10,14 @@ import org.plos.repo.rest.BucketController;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.Response;
-import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.sql.SQLException;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.Response.Status.CREATED;
 import static javax.ws.rs.core.Response.Status.OK;
 import static org.junit.Assert.assertEquals;
-import static org.plos.repo.newones.configs.TestConfig.getFileSystemObjectStorePath;
 
 /**
  * Created by jkrzemien on 7/22/14.
@@ -29,9 +28,9 @@ public class MyBucketControllerTest extends ContentRepoControllerTest {
     private final String bucketName = "plos-bucketunittest-bucket1";
     private final String bucketName2 = "plos-bucketunittest-bucket2";
 
-    @Before
-    public void cleanUpObjectStore() throws Exception {
-      FileUtils.deleteQuietly(new File(getFileSystemObjectStorePath()));
+    @After
+    public void tearDown() throws SQLException {
+        transactions.clearCollectedData();
     }
 
     @Test

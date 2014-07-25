@@ -22,22 +22,14 @@ import org.plos.repo.service.RepoInfoService;
 import org.plos.repo.service.RepoService;
 import org.plos.repo.service.SqlService;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 /**
  * Created by jkrzemien on 7/22/14.
  */
 
+@EnableAspectJAutoProxy
 public class HSQLMogileStorageConfig extends TestConfig {
-
-    @Bean
-    public RepoInfoService repoInfoService() {
-        return new RepoInfoService();
-    }
-
-    @Bean
-    public RepoService repoService() {
-        return new RepoService();
-    }
 
     @Bean
     public SqlService sqlServiceDependency() throws Exception {
