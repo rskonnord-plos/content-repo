@@ -9,7 +9,8 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.plos.repo.newones.configs.*;
+import org.plos.repo.newones.configs.MySQLInMemoryStorageConfig;
+import org.plos.repo.newones.configs.TestConfig;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import javax.ws.rs.client.WebTarget;
@@ -17,7 +18,9 @@ import javax.ws.rs.core.Application;
 import java.util.Arrays;
 import java.util.Collection;
 
-import static org.glassfish.jersey.test.TestProperties.*;
+import static org.glassfish.jersey.test.TestProperties.CONTAINER_PORT;
+import static org.glassfish.jersey.test.TestProperties.DUMP_ENTITY;
+import static org.glassfish.jersey.test.TestProperties.LOG_TRAFFIC;
 import static org.junit.runners.Parameterized.Parameter;
 import static org.junit.runners.Parameterized.Parameters;
 
@@ -31,12 +34,12 @@ public abstract class ContentRepoControllerTest {
     @Parameters(name = "{index} - Mode: {0}")
     public static Collection getPersistanceConfigurations() {
         Object[][] data = new Object[][]{
-            {HSQLInMemoryStorageConfig.class},
-            {HSQLFileSystemStorageConfig.class},
-            {HSQLMogileStorageConfig.class},
+//            {HSQLInMemoryStorageConfig.class},
+//            {HSQLFileSystemStorageConfig.class},
+//            {HSQLMogileStorageConfig.class},
             {MySQLInMemoryStorageConfig.class},
-            {MySQLFileSystemStorageConfig.class},
-            {MySQLMogileStorageConfig.class}
+//            {MySQLFileSystemStorageConfig.class},
+//            {MySQLMogileStorageConfig.class}
         };
         return Arrays.asList(data);
     }

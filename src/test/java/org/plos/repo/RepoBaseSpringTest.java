@@ -36,6 +36,7 @@ public abstract class RepoBaseSpringTest {
         throw new Exception("Object not deleted in DB");
 
       objectStore.deleteObject(object);
+
     }
 
     List<Bucket> bucketList = sqlService.listBuckets();

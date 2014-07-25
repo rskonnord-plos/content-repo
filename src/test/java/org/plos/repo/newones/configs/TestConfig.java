@@ -19,19 +19,26 @@ package org.plos.repo.newones.configs;
 
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import org.hsqldb.jdbc.JDBCDataSource;
-import org.plos.repo.service.*;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.plos.repo.models.Bucket;
+import org.plos.repo.service.FileSystemStoreService;
+import org.plos.repo.service.HsqlService;
+import org.plos.repo.service.InMemoryFileStoreService;
+import org.plos.repo.service.MogileStoreService;
+import org.plos.repo.service.MysqlService;
+import org.plos.repo.service.ObjectStore;
+import org.plos.repo.service.ScriptRunner;
+import org.plos.repo.service.SqlService;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 import static java.lang.System.out;
 
@@ -40,6 +47,9 @@ import static java.lang.System.out;
  */
 
 public abstract class TestConfig {
+
+    protected List<Bucket> savedBuckets = new ArrayList<Bucket>();
+
 
     public static String getMySQLURL() {
         return "jdbc:mysql://localhost:3306/plosrepo_unittest";
@@ -56,7 +66,10 @@ public abstract class TestConfig {
     protected SqlService getHSQLService() throws SQLException, IOException {
         out.println("Creating HSQL service...");
         JDBCDataSource ds = new JDBCDataSource();
-        ds.setUrl("jdbc:hsqldb:mem:plosrepo-unittest-hsqldb;shutdown=true");
+
+        Random rand = new Random();
+
+        ds.setUrl("jdbc:hsqldb:mem:plosrepo-unittest-hsqldb" + rand.nextLong()+";shutdown=true");
         ds.setUser("");
         ds.setPassword("");
 
@@ -83,12 +96,17 @@ public abstract class TestConfig {
 
         Connection connection = ds.getConnection();
 
-        SqlService service = new MysqlService();
+        SqlService service = new MysqlService() {
+          @Override
+          public boolean insertBucket(Bucket bucket) throws SQLException {
+            savedBuckets.add(bucket);
+            boolean retVal = super.insertBucket(bucket);
+            return retVal;
+          }
+        };
         Resource sqlFile = new ClassPathResource("setup.mysql");
         ScriptRunner scriptRunner = new ScriptRunner(connection, false, true);
         scriptRunner.runScript(new BufferedReader(new FileReader(sqlFile.getFile())));
-
-        connection.setAutoCommit(false);
         service.setDataSource(ds);
 
         return service;
@@ -109,15 +127,15 @@ public abstract class TestConfig {
         return new FileSystemStoreService(getFileSystemObjectStorePath(), "");
     }
 
-    @Bean
-    public RepoInfoService repoInfoService() {
-        return new RepoInfoService();
-    }
-
-    @Bean
-    public RepoService repoService() {
-        return new RepoService();
-    }
+//    @Bean
+//    public RepoInfoService repoInfoService() {
+//        return new RepoInfoService();
+//    }
+//
+//    @Bean
+//    public RepoService repoService() {
+//        return new RepoService();
+//    }
 
 }
 

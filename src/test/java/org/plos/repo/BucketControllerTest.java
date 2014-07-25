@@ -16,12 +16,17 @@ import static org.junit.Assert.assertEquals;
 
 public class BucketControllerTest extends RepoBaseJerseyTest {
 
-  private final String bucketName = "plos-bucketunittest-bucket1";
+  private final String bucketName = "plos-bucketunittest-bucket1b";
 
   @Before
   public void setup() throws Exception {
     RepoBaseSpringTest.clearData(objectStore, sqlService);
   }
+//
+//  @After
+//  public void teardown() throws Exception {
+//    RepoBaseSpringTest.clearData(objectStore, sqlService);
+//  }
 
   @Test
   public void bucketAlreadyExists() {

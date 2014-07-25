@@ -18,6 +18,7 @@
 package org.plos.repo;
 
 import org.apache.commons.io.IOUtils;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,6 +41,23 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
   @Before
   public void beforeMethods() throws Exception {
+
+    clearData(objectStore, sqlService);
+
+    // reset the internal beans since their mocks/spies retain between tests
+
+    Field objStoreField = RepoService.class.getDeclaredField("objectStore");
+    objStoreField.setAccessible(true);
+    objStoreField.set(repoService, objectStore);
+
+    Field sqlServiceField = RepoService.class.getDeclaredField("sqlService");
+    sqlServiceField.setAccessible(true);
+    sqlServiceField.set(repoService, sqlService);
+
+  }
+
+  @After
+  public void afterMethods() throws Exception {
 
     clearData(objectStore, sqlService);
 

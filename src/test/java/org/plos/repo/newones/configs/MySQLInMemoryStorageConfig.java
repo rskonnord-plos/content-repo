@@ -49,5 +49,10 @@ public class MySQLInMemoryStorageConfig extends TestConfig {
         return getInMemoryObjectStore();
     }
 
+    @Bean(destroyMethod = "cleanup")
+    public TransactionCleanUp cleanUpTransactions(SqlService sqlService) {
+      return new TransactionCleanUp(sqlService, savedBuckets);
+    }
+
 }
 
