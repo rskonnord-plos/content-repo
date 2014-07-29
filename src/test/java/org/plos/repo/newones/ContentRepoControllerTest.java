@@ -5,20 +5,28 @@ package org.plos.repo.newones;
  */
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.spring.scope.RequestContextFilter;
 import org.glassfish.jersey.test.JerseyTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.plos.repo.newones.configs.*;
+import org.plos.repo.service.RepoException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Response;
 import java.util.Arrays;
 import java.util.Collection;
 
 import static org.glassfish.jersey.test.TestProperties.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.runners.Parameterized.Parameter;
 import static org.junit.runners.Parameterized.Parameters;
 
@@ -51,6 +59,16 @@ public abstract class ContentRepoControllerTest {
 
     private JerseyTest container;
 
+    protected void assertRepoError(Response response, Response.Status httpStatus, RepoException.Type repoError) {
+
+      JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
+
+      assertEquals(response.getStatus(), httpStatus.getStatusCode());
+
+      assertEquals(responseObj.get("repoErrorCode").getAsInt(), repoError.getValue());
+      assertTrue(responseObj.get("message").getAsString().equals(repoError.getMessage()));
+    }
+
     protected synchronized WebTarget target(String path) throws Exception {
         if (container == null) {
             this.container = new JerseyTest() {
@@ -58,6 +76,9 @@ public abstract class ContentRepoControllerTest {
                 protected Application configure() {
                     enable(LOG_TRAFFIC);
                     enable(DUMP_ENTITY);
+
+
+
                     /**
                      * The next line allows randomization of container's port.
                      * Useful for:
@@ -70,6 +91,10 @@ public abstract class ContentRepoControllerTest {
                      */
                     forceSet(CONTAINER_PORT, "0");
                     ResourceConfig resourceUnderTest = new ResourceConfig(getClassUnderTest());
+
+                    resourceUnderTest.register(MultiPartFeature.class, getClassUnderTest());
+                    resourceUnderTest.register(RequestContextFilter.class, getClassUnderTest());
+
                     ApplicationContext springContext = new AnnotationConfigApplicationContext(config);
                     transactions = springContext.getBean(TransactionInterceptor.class);
                     resourceUnderTest.property("contextConfig", springContext);
