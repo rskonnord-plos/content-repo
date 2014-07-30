@@ -6,6 +6,7 @@ import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.junit.After;
 import org.junit.Test;
 import org.plos.repo.rest.BucketController;
+import org.plos.repo.rest.ObjectController;
 import org.plos.repo.service.RepoException;
 
 import javax.ws.rs.client.Entity;
@@ -37,41 +38,45 @@ public class MyBucketControllerTest extends ContentRepoControllerTest {
 
     @Test
     public void bucketAlreadyExists() throws Exception {
-      target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
+        target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
 
-      assertRepoError(
-          target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName))),
-          Response.Status.BAD_REQUEST, RepoException.Type.BucketAlreadyExists);
+        assertRepoError(
+                target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName))),
+                Response.Status.BAD_REQUEST, RepoException.Type.BucketAlreadyExists);
     }
 
-  @Test
-  public void invalidBucketName() throws Exception {
-    assertRepoError(
-        target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName+"-bad?&name"))),
-        Response.Status.BAD_REQUEST, RepoException.Type.IllegalBucketName);
-  }
+    @Test
+    public void invalidBucketName() throws Exception {
+        assertRepoError(
+                target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName + "-bad?&name"))),
+                Response.Status.BAD_REQUEST, RepoException.Type.IllegalBucketName);
+    }
 
-  @Test
-  public void deleteNonEmptyBucket() throws Exception {
+    @Test
+    public void deleteNonEmptyBucket() throws Exception {
 
-    target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
+        Response response = target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
+        assertEquals(CREATED.getStatusCode(), response.getStatus());
 
-    target("/objects").request().post(Entity.entity(new FormDataMultiPart().field("bucketName", bucketName).field("create", "new").field("key", "object1").field("file", "test", MediaType.TEXT_PLAIN_TYPE), MediaType.MULTIPART_FORM_DATA));
 
-    assertRepoError(
-        target("/buckets/" + bucketName)
-            .request(MediaType.APPLICATION_JSON_TYPE).delete(),
-        Response.Status.BAD_REQUEST, RepoException.Type.CantDeleteNonEmptyBucket);
-  }
+        response = target("/objects").request().post(Entity.entity(new FormDataMultiPart().field("bucketName", bucketName).field("create", "new").field("key", "object1").field("file", "test", MediaType.TEXT_PLAIN_TYPE), MediaType.MULTIPART_FORM_DATA));
+        assertEquals(CREATED.getStatusCode(), response.getStatus());
 
-  @Test
-  public void deleteNonExsitingBucket() throws Exception {
 
-    assertRepoError(
-        target("/buckets/" + "nonExistingBucket")
-            .request(MediaType.APPLICATION_JSON_TYPE).delete(),
-        Response.Status.NOT_FOUND, RepoException.Type.BucketNotFound);
-  }
+        assertRepoError(
+                target("/buckets/" + bucketName)
+                        .request(MediaType.APPLICATION_JSON_TYPE).delete(),
+                Response.Status.BAD_REQUEST, RepoException.Type.CantDeleteNonEmptyBucket);
+    }
+
+    @Test
+    public void deleteNonExsitingBucket() throws Exception {
+
+        assertRepoError(
+                target("/buckets/" + "nonExistingBucket")
+                        .request(MediaType.APPLICATION_JSON_TYPE).delete(),
+                Response.Status.NOT_FOUND, RepoException.Type.BucketNotFound);
+    }
 
     @Test
     public void listZeroBuckets() throws Exception {
@@ -118,8 +123,8 @@ public class MyBucketControllerTest extends ContentRepoControllerTest {
     }
 
     @Override
-    public Class<?> getClassUnderTest() {
-        return BucketController.class;
+    public Class<?>[] getClassesUnderTest() {
+        return new Class<?>[] { BucketController.class, ObjectController.class };
     }
 }
 

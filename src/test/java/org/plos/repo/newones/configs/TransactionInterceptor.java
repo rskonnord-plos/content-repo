@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -48,18 +47,21 @@ public class TransactionInterceptor {
 
     @Before("execution(* org.plos.repo.service.RepoService.*(..))")
     private void interceptRepoService(JoinPoint jp) throws Throwable {
-        if (jp.getSignature().getName().startsWith("create")) {
+        String name = jp.getSignature().getName();
+        if (name.equals("createBucket") || name.equals("updateObject") ) {
             collectData(jp.getSignature(), jp.getArgs()[0]);
         }
     }
 
-    private void collectData(Signature signature, Object argument) {
+    private void collectData(Signature signature, Object argument) throws Exception {
         if (argument instanceof String) {
             collectedBucketsAsString.add((String) argument);
         } else if (argument instanceof org.plos.repo.models.Object) {
             collectedObjects.add((org.plos.repo.models.Object) argument);
-        } else {
+        } else if (argument instanceof Bucket) {
             collectedBuckets.add((Bucket) argument);
+        } else {
+            throw new Exception("The argument type provided to the test data interceptor is not known!");
         }
 
         // log it

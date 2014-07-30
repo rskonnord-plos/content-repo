@@ -72,13 +72,18 @@ public abstract class ContentRepoControllerTest {
     protected synchronized WebTarget target(String path) throws Exception {
         if (container == null) {
             this.container = new JerseyTest() {
+
+                @Override
+                protected void configureClient(org.glassfish.jersey.client.ClientConfig config) {
+                    config.register(MultiPartFeature.class);
+                    config.register(RequestContextFilter.class);
+                    super.configureClient(config);
+                }
+
                 @Override
                 protected Application configure() {
                     enable(LOG_TRAFFIC);
                     enable(DUMP_ENTITY);
-
-
-
                     /**
                      * The next line allows randomization of container's port.
                      * Useful for:
@@ -90,10 +95,10 @@ public abstract class ContentRepoControllerTest {
                      * issue described above in your test suite.
                      */
                     forceSet(CONTAINER_PORT, "0");
-                    ResourceConfig resourceUnderTest = new ResourceConfig(getClassUnderTest());
 
-                    resourceUnderTest.register(MultiPartFeature.class, getClassUnderTest());
-                    resourceUnderTest.register(RequestContextFilter.class, getClassUnderTest());
+                    ResourceConfig resourceUnderTest = new ResourceConfig(getClassesUnderTest());
+                    resourceUnderTest.register(MultiPartFeature.class);
+                    resourceUnderTest.register(RequestContextFilter.class);
 
                     ApplicationContext springContext = new AnnotationConfigApplicationContext(config);
                     transactions = springContext.getBean(TransactionInterceptor.class);
@@ -106,5 +111,5 @@ public abstract class ContentRepoControllerTest {
         return container.target(path);
     }
 
-    abstract public Class<?> getClassUnderTest();
+    abstract public Class<?>[] getClassesUnderTest();
 }
