@@ -22,12 +22,13 @@ public class RepoException extends Exception {
     InvalidLimit(17, "Invalid limit"),
     IllegalBucketName(18, "Bucket name contains illegal characters"),
     ObjectDataEmpty(19, "Object data must be non-empty"),
+    InvalidVersionParameter(20, "Invalid version parameter"),
 
     // user errors for system state
-    CantDeleteNonEmptyBucket(20, "Can not delete bucket since it contains objects"),
-    CantCreateNewObjectWithUsedKey(21, "Can not create an object with a key that already exists"),
-    CantCreateVersionWithNoOrig(22, "Can not version an object that does not exist"),
-    BucketAlreadyExists(23, "Bucket already exists");
+    CantDeleteNonEmptyBucket(50, "Can not delete bucket since it contains objects"),
+    CantCreateNewObjectWithUsedKey(51, "Can not create an object with a key that already exists"),
+    CantCreateVersionWithNoOrig(52, "Can not version an object that does not exist"),
+    BucketAlreadyExists(53, "Bucket already exists");
 
 
     private final int value;

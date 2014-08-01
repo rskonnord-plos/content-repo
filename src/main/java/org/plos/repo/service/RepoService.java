@@ -33,6 +33,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -237,20 +238,27 @@ public class RepoService {
     }
   }
 
+  private void setObjectRedirects(Object object) throws RepoException {
+    if (serverSupportsReproxy()) {
+      object.reproxyUrls = new ArrayList<>();
+
+      URL[] urls = objectStore.getRedirectURLs(object);
+
+      for (URL url : urls)
+        object.reproxyUrls.add(url.toString());
+    }
+  }
+
   public Object getObject(String bucketName, String key, Integer version) throws RepoException {
 
     Lock readLock = this.rwLocks.get(bucketName + key).readLock();
     readLock.lock();
 
-    Object object;
-
     try {
       sqlService.getConnection();
 
-      if (version == null)
-        object = sqlService.getObject(bucketName, key);
-      else
-        object = sqlService.getObject(bucketName, key, version);
+      Object object = sqlService.getObject(bucketName, key, version);
+      setObjectRedirects(object);
 
       if (object == null)
         throw new RepoException(RepoException.Type.ObjectNotFound);
@@ -273,23 +281,17 @@ public class RepoService {
 
     try {
       sqlService.getConnection();
-      return sqlService.listObjectVersions(object);
+      List<Object> versions = sqlService.listObjectVersions(object);
+
+      for (Object version : versions)
+        setObjectRedirects(version);
+
+      return versions;
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
       sqlReleaseConnection();
       readLock.unlock();
-    }
-  }
-
-  public URL[] getObjectReproxy(Object object) throws RepoException {
-    try {
-      sqlService.getConnection();
-      return objectStore.getRedirectURLs(object);
-    } catch (Exception e) {
-      throw new RepoException(e);
-    } finally {
-      sqlReleaseConnection();
     }
   }
 

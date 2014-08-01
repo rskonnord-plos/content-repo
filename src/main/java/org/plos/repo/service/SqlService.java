@@ -203,40 +203,15 @@ public abstract class SqlService {
 
   }
 
-  public Object getObject(String bucketName, String key) throws SQLException {
-
-    PreparedStatement p = null;
-    ResultSet result = null;
-
-    try {
-
-      p = connectionLocal.get().prepareStatement("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND objKey=? AND status=? ORDER BY versionNumber DESC LIMIT 1");
-
-      p.setString(1, bucketName);
-      p.setString(2, key);
-      p.setInt(3, Object.Status.USED.getValue());
-
-      result = p.executeQuery();
-
-      if (result.next()) {
-        Object object = mapObjectRow(result);
-
-        if (object.status == Object.Status.DELETED) {
-          log.info("searched for object which has been deleted. id: " + object.id);
-          return null;
-        }
-
-        return object;
-      }
-      else
-        return null;
-
-    } finally {
-      closeDbStuff(result, p);
-    }
-
-  }
-
+  /**
+   *
+   * @param bucketName
+   * @param key
+   * @param version When null, get the latest version. When -1 get all versions.
+   *                When another integer, get that integer version.
+   * @return
+   * @throws SQLException
+   */
   public Object getObject(String bucketName, String key, Integer version) throws SQLException {
 
     PreparedStatement p = null;
@@ -244,24 +219,32 @@ public abstract class SqlService {
 
     try {
 
-      p = connectionLocal.get().prepareStatement("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND objKey=? AND versionNumber=?");
+      StringBuilder q = new StringBuilder();
+      q.append("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND objKey=?");
 
-      p.setString(1, bucketName);
-      p.setString(2, key);
-      p.setInt(3, version);
+      if (version != null && version != -1)
+        q.append(" AND versionNumber=?");
+      if (version == null || version != -1)
+        q.append(" AND status=?");
+
+      q.append(" ORDER BY versionNumber DESC LIMIT 1");
+
+      p = connectionLocal.get().prepareStatement(q.toString());
+
+      int index = 0;
+
+      p.setString(++index, bucketName);
+      p.setString(++index, key);
+
+      if (version != null && version != -1)
+        p.setInt(++index, version);
+      if (version == null || version != -1)
+        p.setInt(++index, Object.Status.USED.getValue());
 
       result = p.executeQuery();
 
-      if (result.next()) {
-        Object object = mapObjectRow(result);
-
-        if (object.status == Object.Status.DELETED) {
-          log.info("searched for object which has been deleted. id: " + object.id);
-          return null;
-        }
-
-        return object;
-      }
+      if (result.next())
+        return mapObjectRow(result);
       else
         return null;
 
@@ -433,11 +416,10 @@ public abstract class SqlService {
 
     try {
 
-      p = connectionLocal.get().prepareStatement("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=? AND objKey=? AND status=? ORDER BY versionNumber ASC");
+      p = connectionLocal.get().prepareStatement("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=? AND objKey=? ORDER BY versionNumber ASC");
 
       p.setString(1, object.bucketName);
       p.setString(2, object.key);
-      p.setInt(3, Object.Status.USED.getValue()); // TODO: make this in input a parameter?
 
       result = p.executeQuery();
 

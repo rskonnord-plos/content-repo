@@ -39,11 +39,9 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
-import java.net.URL;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -116,26 +114,29 @@ public class ObjectController {
   @ApiOperation(value = "Fetch info about an object and its versions", response = Object.class)
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public Response readMetadata(
-      @ApiParam(required = true) @PathParam("bucketName") String bucketName,
-      @ApiParam(required = true) @QueryParam("key") String key,
-      @QueryParam("version") Integer version
-      // TODO: have includeAllRecords for deleted and version listing
-      // TODO: handle If-Modified-Since here ?
+      @ApiParam(required = true)  @PathParam("bucketName") String bucketName,
+      @ApiParam(required = true)  @QueryParam("key") String key,
+      @ApiParam(required = false, value="When empty gets the latest version. When 'all' lists all versions even if deleted.") @QueryParam("version") String version
   ) {
 
     try {
 
-      Object object = repoService.getObject(bucketName, key, version);
+      Object object;
 
-      if (repoService.serverSupportsReproxy()) {
-        object.reproxyUrls = new ArrayList<>();
-        URL[] urls = repoService.getObjectReproxy(object);
+      try {
+        object = repoService.getObject(bucketName, key, Integer.parseInt(version));
+      } catch (NumberFormatException e) {
 
-        for (URL url : urls)
-          object.reproxyUrls.add(url.toString());
+        if (version == null)
+          object = repoService.getObject(bucketName, key, null);
+        else if (version.equals("all"))
+          object = repoService.getObject(bucketName, key, -1);
+        else
+          throw new RepoException(RepoException.Type.InvalidVersionParameter);
       }
 
-      object.versions = repoService.getObjectVersions(object);
+      if (version != null && version.equals("all"))
+        object.versions = repoService.getObjectVersions(object);
 
       return Response.status(Response.Status.OK)
           .lastModified(object.timestamp)
