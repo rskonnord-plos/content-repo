@@ -17,7 +17,6 @@
 
 package org.plos.repo.rest;
 
-import com.google.common.base.Joiner;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -40,9 +39,11 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
+import java.net.URL;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -52,19 +53,6 @@ import java.util.List;
 public class ObjectController {
 
   private static final Logger log = LoggerFactory.getLogger(ObjectController.class);
-
-  private static final Joiner REPROXY_URL_JOINER = Joiner.on(' ');
-
-  private static final int REPROXY_CACHE_FOR_VALUE = 6 * 60 * 60; // TODO: Make configurable
-
-  private static final String REPROXY_CACHE_FOR_HEADER =
-      REPROXY_CACHE_FOR_VALUE + "; Last-Modified Content-Type Content-Disposition";
-
-  private static final String REPROXY_HEADER_URL = "X-Reproxy-URL";
-
-  private static final String REPROXY_HEADER_CACHE_FOR = "X-Reproxy-Cache-For";
-
-  private static final String REPROXY_HEADER_FILE = "reproxy-file";
 
   private static final String RFC1123_DATE_TIME_FORMAT =  "EEE, dd MMM yyyy HH:mm:ss z";
 
@@ -131,13 +119,24 @@ public class ObjectController {
       @ApiParam(required = true) @PathParam("bucketName") String bucketName,
       @ApiParam(required = true) @QueryParam("key") String key,
       @QueryParam("version") Integer version
+      // TODO: have includeAllRecords for deleted and version listing
+      // TODO: handle If-Modified-Since here ?
   ) {
 
     try {
 
       Object object = repoService.getObject(bucketName, key, version);
 
+      if (repoService.serverSupportsReproxy()) {
+        object.reproxyUrls = new ArrayList<>();
+        URL[] urls = repoService.getObjectReproxy(object);
+
+        for (URL url : urls)
+          object.reproxyUrls.add(url.toString());
+      }
+
       object.versions = repoService.getObjectVersions(object);
+
       return Response.status(Response.Status.OK)
           .lastModified(object.timestamp)
           .entity(object).build();
@@ -150,13 +149,12 @@ public class ObjectController {
   @GET @Path("/{bucketName}")
   @ApiOperation(value = "Fetch an object or its metadata", response = Object.class)
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-  public Response read(@ApiParam(required = true) @PathParam("bucketName") String bucketName,
-                       @ApiParam(required = true) @QueryParam("key") String key,
-                       @QueryParam("version") Integer version,
-                       @QueryParam("fetchMetadata") Boolean fetchMetadata,  // TODO: deprecate this somehow
-                       @ApiParam(value = "If set to 'reproxy-file' then it will attempt to return a header representing a redirected object URL")
-                       @HeaderParam("X-Proxy-Capabilities") String requestXProxy,
-                       @HeaderParam("If-Modified-Since") String ifModifiedSinceStr
+  public Response read(
+      @ApiParam(required = true) @PathParam("bucketName") String bucketName,
+      @ApiParam(required = true) @QueryParam("key") String key,
+      @QueryParam("version") Integer version,
+      @QueryParam("fetchMetadata") Boolean fetchMetadata,  // TODO: deprecate this somehow
+      @HeaderParam("If-Modified-Since") String ifModifiedSinceStr
   ) {
 
     Object object;
@@ -167,7 +165,6 @@ public class ObjectController {
       object = repoService.getObject(bucketName, key, version);
 
       if (ifModifiedSinceStr != null) {
-
         Date ifModifiedSince = new SimpleDateFormat(RFC1123_DATE_TIME_FORMAT).parse(ifModifiedSinceStr);
         notModifiedSince = object.timestamp.compareTo(ifModifiedSince) <= 0;
       }
@@ -188,27 +185,6 @@ public class ObjectController {
         return Response.status(Response.Status.OK)
             .lastModified(object.timestamp)
             .entity(object).build();
-      } catch (RepoException e) {
-        return handleError(e);
-      }
-    }
-
-
-    // if they want redirect URLs
-
-    if (requestXProxy != null && requestXProxy.equals(REPROXY_HEADER_FILE) && repoService.serverSupportsReproxy()) {
-
-      try {
-        Response.Status status = Response.Status.OK;
-
-        if (notModifiedSince)
-          status = Response.Status.NOT_MODIFIED;
-
-        return Response.status(status)
-            .lastModified(object.timestamp)
-            .header(REPROXY_HEADER_URL, REPROXY_URL_JOINER.join(repoService.getObjectReproxy(object)))
-            .header(REPROXY_HEADER_CACHE_FOR, REPROXY_CACHE_FOR_HEADER)
-            .build();
       } catch (RepoException e) {
         return handleError(e);
       }

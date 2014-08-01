@@ -67,7 +67,8 @@ public class Object {
   public Integer versionNumber;
   public Status status;
 
-  public List<Object> versions;
+  public List<String> reproxyUrls;  // used by the controller when fetching metadata
+  public List<Object> versions;     // used by the controller when fetching metadata
 
   // empty constructor required for JAXB mapping
   private Object() {

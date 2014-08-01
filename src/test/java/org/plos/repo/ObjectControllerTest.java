@@ -284,6 +284,9 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
   @Test
   public void crudHappyPath() throws Exception {
 
+    JsonObject jsonObject;
+    JsonArray jsonArray;
+
     String responseString = target("/objects").request(MediaType.APPLICATION_JSON_TYPE).get(String.class);
     assertEquals(responseString, "[]");
 
@@ -346,7 +349,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     // LIST
 
     responseString = target("/objects/").queryParam("bucketName", bucketName).request().accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
-    JsonArray jsonArray = gson.fromJson(responseString, JsonElement.class).getAsJsonArray();
+    jsonArray = gson.fromJson(responseString, JsonElement.class).getAsJsonArray();
 
     assertEquals(jsonArray.size(), 4);
 
@@ -393,17 +396,22 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     // REPROXY
 
     if (objectStore.hasXReproxy()) {
-      response = target("/objects/" + bucketName).queryParam("key", "object1").queryParam("version", "0").request().header("X-Proxy-Capabilities", "reproxy-file").get();
-      assertNotNull(response.getHeaderString("X-Reproxy-URL"));
-      assertEquals(response.readEntity(String.class), "");
-      assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
 
-      String reproxyUrl = response.getHeaderString("X-Reproxy-URL");
-      URL url = new URL(reproxyUrl);
-      InputStream inputStream = url.openStream();
-      String testData1Out = IOUtils.toString(url.openStream(), Charset.defaultCharset());
-      inputStream.close();
-      assertEquals(testData1, testData1Out);
+      responseString = target("/objects/meta/" + bucketName).queryParam("key", "object1").request().accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+
+      jsonObject = gson.fromJson(responseString, JsonElement.class).getAsJsonObject();
+      jsonArray = jsonObject.getAsJsonArray("reproxyUrls");
+
+      assertNotNull(jsonArray);
+
+      for (JsonElement element : jsonArray) {
+        URL url = new URL(element.getAsString());
+        InputStream inputStream = url.openStream();
+        String testData1Out = IOUtils.toString(url.openStream(), Charset.defaultCharset());
+        inputStream.close();
+        assertEquals(testData1, testData1Out);
+      }
+
     }
 
 
@@ -431,7 +439,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     // VERSION LIST
 
     responseString = target("/objects/" + bucketName).queryParam("key", "object2").queryParam("fetchMetadata", "true").request().accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
-    JsonObject jsonObject = gson.fromJson(responseString, JsonElement.class).getAsJsonObject();
+    jsonObject = gson.fromJson(responseString, JsonElement.class).getAsJsonObject();
     jsonArray = jsonObject.getAsJsonArray("versions");
 
     assertEquals(jsonArray.size(), 3);
@@ -480,10 +488,6 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
     response = target("/objects/" + bucketName).queryParam("key", "object1").queryParam("version", "0").request().delete();
     assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
-
-    // TODO: tests to add
-    //   object deduplication
-    //   check url redirect resolve order (db vs filestore)
 
   }
 }

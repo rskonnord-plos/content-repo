@@ -48,7 +48,7 @@ public class TestSpringConfig {
   @Bean
   public ObjectStore objectStore() throws Exception {
     return new InMemoryFileStoreService();
-//    return new FileSystemStoreService("/tmp/repo_unittest");
+//    return new FileSystemStoreService("/home/jfinger/data/repo_testdata", "http://localhost/objdata");
 //    return new MogileStoreService("toast", new String[]{"localhost:7001"}, 1, 1, 100);
   }
 
