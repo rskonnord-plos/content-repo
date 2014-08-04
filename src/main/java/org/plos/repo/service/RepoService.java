@@ -258,10 +258,11 @@ public class RepoService {
       sqlService.getConnection();
 
       Object object = sqlService.getObject(bucketName, key, version);
-      setObjectRedirects(object);
 
       if (object == null)
         throw new RepoException(RepoException.Type.ObjectNotFound);
+
+      setObjectRedirects(object);
 
       return object;
 
