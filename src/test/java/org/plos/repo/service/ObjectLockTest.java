@@ -117,7 +117,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       assertEquals(UPDATE_THREADS + 1, versions.size());
     }
 
-    verify(spySqlService, times(READER_THREADS*2)).getObject(anyString(), anyString(), anyInt());
+    verify(spySqlService, times(READER_THREADS*2 + INSERT_THREADS + UPDATE_THREADS)).getObject(anyString(), anyString(), anyInt());
   }
 
 
@@ -163,7 +163,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
     }
 
-    verify(spySqlService, times(READER_THREADS*3)).getObject(anyString(), anyString(), anyInt());
+    verify(spySqlService, times(READER_THREADS*3 + INSERT_THREADS + UPDATE_THREADS)).getObject(anyString(), anyString(), anyInt());
   }
 
   @Test
@@ -200,7 +200,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       assertTrue(this.objectStore.objectExists(obj));
     }
 
-    verify(spySqlService, times(READER_THREADS)).getObject(anyString(), anyString(), anyInt());
+    verify(spySqlService, times(READER_THREADS+INSERT_THREADS)).getObject(anyString(), anyString(), anyInt());
   }
 
   private void execute(final int insertThreads, final int updateThreads,

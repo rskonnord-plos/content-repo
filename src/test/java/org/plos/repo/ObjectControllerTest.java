@@ -477,7 +477,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
     // NEW VERSIONS METHOD
     
-    responseString = target("/objects/meta/" + bucketName).queryParam("key", "object2").request().accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+    responseString = target("/objects/meta/" + bucketName).queryParam("key", "object2").queryParam("version", "all").request().accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
     jsonObject = gson.fromJson(responseString, JsonElement.class).getAsJsonObject();
     jsonArray = jsonObject.getAsJsonArray("versions");
 

@@ -231,7 +231,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     sqlService.getConnection();
 
-    Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1");
+    Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1", null);
 
     Assert.assertTrue(objFromDb.key.equals("key1"));
     sqlService.releaseConnection();
@@ -269,7 +269,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     // check state
 
     sqlService.getConnection();
-    Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1");
+    Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1", null);
     Assert.assertTrue(objFromDb == null);
     sqlService.releaseConnection();
     Assert.assertFalse(objectStore.objectExists(new Object(null, null, "cbcc2ff6a0894e6e7f9a1a6a6a36b68fb36aa151", null, null, null, 0l, null, null, bucket1.bucketName, null, null)));
@@ -299,7 +299,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     // check state
 
     sqlService.getConnection();
-    Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1");
+    Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1", null);
     Assert.assertTrue(objFromDb == null);
     sqlService.releaseConnection();
     Assert.assertTrue(objectStore.objectExists(new Object(null, null, "cbcc2ff6a0894e6e7f9a1a6a6a36b68fb36aa151", null, null, null, 0l, null, null, bucket1.bucketName, null, null)));  // since we do not delete object data
@@ -324,7 +324,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     sqlService.getConnection();
 
-    Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1");
+    Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1", null);
 
     Assert.assertTrue(objFromDb.key.equals("key1"));
     sqlService.releaseConnection();
@@ -366,7 +366,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     sqlService.getConnection();
 
-    Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1");
+    Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1", null);
 
     Assert.assertTrue(objFromDb == null);
     sqlService.releaseConnection();
@@ -403,7 +403,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     // check state
 
     sqlService.getConnection();
-    Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1");
+    Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1", null);
     Assert.assertTrue(objFromDb != null);
     sqlService.releaseConnection();
     Assert.assertTrue(objectStore.objectExists(new Object(null, null, "cbcc2ff6a0894e6e7f9a1a6a6a36b68fb36aa151", null, null, null, 0l, null, null, bucket1.bucketName, null, null)));  // since we do not delete object data
@@ -428,7 +428,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     sqlService.getConnection();
 
-    Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1");
+    Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1", null);
 
     Assert.assertTrue(objFromDb.key.equals("key1"));
     sqlService.releaseConnection();
@@ -473,7 +473,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     sqlService.getConnection();
 
-    Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1");
+    Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1", null);
 
     Assert.assertTrue(objFromDb.key.equals("key1"));
     sqlService.releaseConnection();
@@ -482,7 +482,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     Assert.assertTrue(IOUtils.toString(objectStore.getInputStream(objFromDb)).equals("data1"));
 
 
-    Assert.assertTrue(repoService.getObjectVersions(objFromDb).size() == 1);
+    Assert.assertTrue(repoService.getObjectVersions(objFromDb).size() == 2);
     Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null, false).size() == 1);
 
     Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null, true).size() == 2);
@@ -509,7 +509,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     sqlService.getConnection();
 
-    Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1");
+    Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1", null);
 
     Assert.assertTrue(objFromDb.key.equals("key1"));
     sqlService.releaseConnection();
@@ -528,12 +528,12 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     if (repoService.serverSupportsReproxy()) {
 
-      Assert.assertTrue(repoService.getObjectReproxy(newObj).length > 0);
+      Assert.assertTrue(newObj.reproxyUrls.size() > 0);
 
       // TODO: get the URLs and verify their downloaded content
 
     } else {
-      Assert.assertTrue(repoService.getObjectReproxy(newObj).length == 0);
+      Assert.assertTrue(newObj.reproxyUrls == null);
     }
   }
 
