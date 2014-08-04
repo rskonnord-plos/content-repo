@@ -43,9 +43,11 @@ public abstract class ContentRepoControllerTest {
             {HSQLInMemoryStorageConfig.class},
             {HSQLFileSystemStorageConfig.class},
             {HSQLMogileStorageConfig.class},
+//            {HSQLS3StorageConfig.class}, // Need S3 credentials to work
             {MySQLInMemoryStorageConfig.class},
             {MySQLFileSystemStorageConfig.class},
-            {MySQLMogileStorageConfig.class}
+            {MySQLMogileStorageConfig.class},
+//            {MySQLS3StorageConfig.class}, // Need S3 credentials to work
         };
         return Arrays.asList(data);
     }

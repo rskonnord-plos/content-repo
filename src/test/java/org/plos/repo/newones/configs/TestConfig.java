@@ -19,6 +19,7 @@ package org.plos.repo.newones.configs;
 
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import org.hsqldb.jdbc.JDBCDataSource;
+import org.plos.repo.config.S3StoreFactory;
 import org.plos.repo.models.*;
 import org.plos.repo.service.*;
 import org.springframework.context.annotation.Bean;
@@ -109,6 +110,28 @@ public abstract class TestConfig {
     protected ObjectStore getFileSystemObjectStore() throws Exception {
         out.println("Creating FS service...");
         return new FileSystemStoreService(getFileSystemObjectStorePath(), "");
+    }
+
+    protected ObjectStore getS3ObjectStore() {
+      out.println("Creating S3 service...");
+      String aws_access_key = "invalid_access_key"; // Testing credentials for Amazon S3 should go here
+      String aws_secret_key = "invalid_secret_key"; // Testing credentials for Amazon S3 should go here
+      return new S3StoreService(aws_access_key, aws_secret_key);
+
+      /*
+      I don't like this, but seems like you can also do it this way:
+
+      Context initContext = new InitialContext();
+      ObjectStore objStore = (ObjectStore) envContext.lookup("repo/objectStore");
+
+      If you have a resource configured like this:
+
+      <Resource name="repo/objectStore" type="org.plos.repo.service.S3StoreService"
+        factory="org.plos.repo.config.S3StoreFactory"
+        awsAccessKey="abc"
+        awsSecretKey="def" />
+
+     */
     }
 
     @Bean
