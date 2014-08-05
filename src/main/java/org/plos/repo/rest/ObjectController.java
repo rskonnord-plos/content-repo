@@ -138,9 +138,8 @@ public class ObjectController {
       if (version != null && version.equals("all"))
         object.versions = repoService.getObjectVersions(object);
 
-      return Response.status(Response.Status.OK)
-          .lastModified(object.timestamp)
-          .entity(object).build();
+      return Response.status(Response.Status.OK).entity(object).build();
+      
     } catch (RepoException e) {
       return handleError(e);
     }
