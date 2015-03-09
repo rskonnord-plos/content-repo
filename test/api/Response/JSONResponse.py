@@ -20,6 +20,7 @@ class JSONResponse(AbstractResponse):
   def __init__(self, response):
     try:
       self._json = json.loads(response)
+      print(unicode(self._json))
     except Exception as e:
       print 'Error while trying to parse response as JSON!'
       print 'Actual response was: "%s"' % response
@@ -41,6 +42,7 @@ class JSONResponse(AbstractResponse):
     return self.jpath('$..creationDate')
 
   def get_bucketID(self):
+    print(self.jpath('$..bucketID'))
     return self.jpath('$..bucketID')
 
   def get_bucketName(self):

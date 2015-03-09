@@ -15,12 +15,13 @@ DEFAULT_HEADERS = {'Accept': 'application/json'}
 HEADER = '-H'
 
 
+
 class BucketsJson(BaseServiceTest):
 
   def get_buckets(self):
     """
     Calls CREPO API to get bucket list
-    :param
+    :param None
     :return:JSON response
     """
     header = {'header': HEADER}
@@ -28,23 +29,41 @@ class BucketsJson(BaseServiceTest):
     self.parse_response_as_json()
 
   @needs('parsed', 'parse_response_as_json()')
-  def verify_buckets(self):
+  def verify_buckets(self, bucketname):
     """
     Verifies a valid response to api request GET /buckets
     by validating the corpus bucket specific to either our
     development or performance stack environments.
 
-    :param API_BASE_URL from Base.Config or environment variable
+    :param bucketname
     :return: Success or Error msg on Failure
     """
-    if(API_BASE_URL == 'http://sfo-perf-plosrepo01.int.plos.org:8002'):
-      expected_bucket = u'mogilefs-prod-repo'
-    elif(API_BASE_URL == 'http://rwc-prod-plosrepo.int.plos.org:8002'):
-      expected_bucket = u'mogilefs-prod-repo'
-    else:
-      expected_bucket = u'corpus'
-
     print ('Validating buckets...'),
     actual_buckets = self.parsed.get_bucketName()
-    #print(unicode(actual_buckets))
-    self.assertTrue(expected_bucket in actual_buckets, expected_bucket + ' not found in ' + unicode(actual_buckets))
+    self.assertTrue(bucketname in actual_buckets, bucketname + ' not found in ' + unicode(actual_buckets))
+
+
+  def get_bucket_bucketname(self, bucketname):
+    """
+    Calls CREPO API to get information on a specific bucket
+    :param bucketname
+    :return: Success or Error msg on failure
+    """
+    header = {'header': HEADER}
+    self.doGet('%s/%s' % (BUCKETS_API, bucketname), header, DEFAULT_HEADERS)
+    self.parse_response_as_json()
+
+  def verify_specific_bucket(self, bucketname):
+    """
+    Verifies a valid response to api request GET /buckets/{bucketName}
+
+    :return: Success or Error msg on failure.
+    """
+    bucket_id = self.parsed.get_bucketID()
+    bucket_name = self.parsed.get_bucketName()
+    bucket_time_stamp = self.parsed.get_bucketTimestamp()
+    bucket_creation_date = self.parsed.get_bucketCreationDate()
+    bucket_active_objects = self.parsed.get_bucketActiveObjects()
+    bucket_total_objects = self.parsed.get_bucketTotalObjects()
+    print('bucketID: ' + unicode(bucket_id), 'bucketName: ' + str(bucket_name), 'timestamp: ' + str(bucket_time_stamp), 'creationDate: ' + str(bucket_creation_date), 'activeObjects: ' + unicode(bucket_active_objects), 'totalObjects: ' + unicode(bucket_total_objects))
+
